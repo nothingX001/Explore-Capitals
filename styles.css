@@ -1,0 +1,824 @@
+/* (Unchanged from your original, included below) */
+
+/* 1) Basic Reset */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+}
+
+/* Add emoji font support */
+.flag-emoji {
+    font-family: "Segoe UI Emoji", "Twemoji Mozilla", "Apple Color Emoji", "EmojiOne Color",
+                 "Android Emoji", "Noto Color Emoji", "EmojiSymbols", "Symbola", system-ui,
+                 -apple-system, sans-serif;
+    font-size: 1.2em;
+    line-height: 1;
+    vertical-align: middle;
+    display: inline-block;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "pnum" 1, "tnum" 0, "onum" 0,
+                           "lnum" 0, "dlig" 0, "hlig" 0;
+    font-variation-settings: "FILL" 0;
+}
+
+/* Windows-specific emoji adjustments */
+@media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
+    .flag-emoji {
+        font-family: "Segoe UI Emoji", "Twemoji Mozilla", "Noto Color Emoji", system-ui;
+    }
+}
+
+/* Edge-specific emoji adjustments */
+@supports (-ms-ime-align: auto) {
+    .flag-emoji {
+        font-family: "Segoe UI Emoji", "Twemoji Mozilla", "Noto Color Emoji", system-ui;
+    }
+}
+
+/* 2) Body Defaults */
+body {
+    font-family: "Courier New", Courier, monospace;
+    background-color: #3B4B54;
+    color: #ECECEC;
+    margin: 0;
+    padding: 0 0 20px 0;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(180deg, #3B4B54, #DCCB9C);
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+}
+
+@supports(padding: max(0px)) {
+    body::before {
+        top: calc(0px - env(safe-area-inset-top));
+        right: calc(0px - env(safe-area-inset-right));
+        bottom: calc(0px - env(safe-area-inset-bottom));
+        left: calc(0px - env(safe-area-inset-left));
+    }
+}
+
+/* 3) Navbar */
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 80px;
+    background: transparent;
+    z-index: 9999;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    transition: background-color 0.3s ease;
+}
+
+.navbar.scrolled {
+    background-color: rgba(47, 59, 68, 0.95);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+@supports (padding-top: env(safe-area-inset-top)) {
+    .navbar {
+        padding-top: env(safe-area-inset-top);
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+        height: calc(80px + env(safe-area-inset-top));
+        transition: background-color 0.3s ease;
+    }
+
+    body {
+        padding-top: env(safe-area-inset-top);
+    }
+}
+
+body.menu-open {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+}
+
+/* 4) Navbar Container */
+.navbar-container {
+    position: relative;
+    width: 100%;
+    min-width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* 5) Logo */
+.navbar-logo {
+    position: relative;
+    margin-left: 35px;
+    display: flex;
+    align-items: center;
+    height: 80px;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+.navbar-logo img {
+    display: block;
+    height: 30px;
+    width: auto;
+    border-radius: 8px;
+}
+
+/* 6) Navigation List */
+.navbar-list {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    list-style: none;
+    display: flex;
+    gap: 40px;
+    align-items: center;
+    white-space: nowrap;
+    height: 80px;
+}
+.navbar-list li a {
+    color: #ECECEC;
+    text-decoration: none;
+    font-size: 1rem;
+    transition: color 0.3s ease;
+}
+.navbar-list li a:hover {
+    color: #DCCB9C;
+}
+
+/* 7) Hamburger Menu */
+.navbar-toggle {
+    position: absolute;
+    right: 35px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: none;
+    width: 30px;
+    height: 30px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    z-index: 1001;
+    line-height: 30px;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+.navbar-toggle::before {
+    content: '☰';
+    font-size: 1.5rem;
+    color: #ECECEC;
+    display: inline-block;
+    width: 30px;
+    text-align: center;
+}
+
+/* 8) Mobile & Tablet Adjustments */
+@media (max-width: 1100px) {
+    .navbar-list {
+        display: none;
+    }
+    .navbar-toggle {
+        display: block;
+    }
+}
+
+/* 9) Main Page Containers */
+.page-content,
+.quiz,
+.country-profiles,
+.about,
+.world-map {
+    margin-top: 100px;
+    margin-bottom: 20px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 20px;
+    background-color: #2A363B;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    text-align: center;
+    color: #ECECEC;
+}
+
+/* 10) Headings */
+h1, h2, h3 {
+    font-family: "Courier New", Courier, monospace;
+    margin-bottom: 20px;
+    text-align: center;
+    line-height: 1.2;
+    letter-spacing: 0.5px;
+}
+h1 { 
+    font-size: 2rem; 
+    font-weight: 600;
+}
+h2 { 
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+h3 { 
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+/* 11) Search Input */
+.search-bar-container {
+    width: 300px;
+    margin: 0 auto;
+    position: relative !important;
+}
+
+input[type="text"] {
+    width: 100%;
+    padding: 15px;
+    font-size: 1rem;
+    border: 1px solid #444;
+    border-radius: 4px;
+    background-color: #FFFFFF;
+    color: #333333;
+    font-family: "Courier New", Courier, monospace;
+    margin: 0;
+}
+
+input[type="text"]:focus {
+    outline: none;
+    border-color: #DCCB9C;
+    box-shadow: 0 0 0 2px rgba(220, 203, 156, 0.2);
+}
+
+/* 12) Buttons */
+.button {
+    font-family: Arial, sans-serif;
+    display: block;
+    width: 280px;
+    margin: 15px auto;
+    padding: 12px 0;
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #1F2B30;
+    text-align: center;
+    border: none;
+    border-radius: 50px;
+    background: linear-gradient(180deg, #DCCB9C, #C0AA75);
+    box-shadow: inset 0 3px 6px rgba(255,255,255,0.3), 0 6px 12px rgba(0,0,0,0.2);
+    transition: all 0.3s ease-in-out;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.button:hover {
+    background: linear-gradient(180deg, #C8B882, #B89F6A);
+}
+.button:active {
+    box-shadow: inset 0 6px 12px rgba(0,0,0,0.2), 0 3px 6px rgba(0,0,0,0.1);
+    transform: translateY(2px);
+}
+
+/* 13) Flash Messages */
+.message {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #404B50;
+    border-radius: 2px;
+    color: #ECECEC;
+    margin-bottom: 0 !important;
+}
+
+.message a {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+.message a:hover {
+    text-decoration: none;
+    color: #DCCB9C;
+}
+
+/* 14) Autocomplete Dropdown */
+.autocomplete-dropdown {
+    position: absolute;
+    width: 100%;
+    left: 0;
+    top: 100%;
+    background-color: #FFFFFF;
+    border: 1px solid #444;
+    border-radius: 0 0 4px 4px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    max-height: 300px;
+    overflow-y: auto;
+    margin-top: -1px;
+    z-index: 1000;
+    display: none;
+}
+
+.autocomplete-dropdown[style*="display: block"] {
+    display: block !important;
+}
+
+input[type="text"].show-dropdown {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    border-bottom-color: transparent;
+}
+
+.autocomplete-dropdown li {
+    padding: 12px 15px;
+    font-size: 1rem;
+    color: #333333;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    list-style: none;
+    text-align: left;
+    line-height: 1.4;
+    margin: 0;
+}
+
+.autocomplete-dropdown li:hover {
+    background-color: #f5f5f5;
+}
+
+.autocomplete-dropdown li.active {
+    background-color: #DCCB9C;
+    color: #1F2B30;
+}
+
+.autocomplete-dropdown::-webkit-scrollbar {
+    width: 8px;
+}
+.autocomplete-dropdown::-webkit-scrollbar-track {
+    background: #3B4B54;
+    border-radius: 4px;
+}
+.autocomplete-dropdown::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 4px;
+}
+.autocomplete-dropdown::-webkit-scrollbar-thumb:hover {
+    background: #666;
+}
+
+/* 15) Quiz Section */
+.quiz {
+    text-align: left;
+}
+.quiz h1 {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 20px;
+    color: #F0F0F0;
+}
+.quiz p {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 1rem;
+    color: #ECECEC;
+}
+
+/* Quiz Links */
+.quiz-link {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+.quiz-link:hover {
+    text-decoration: none;
+    color: inherit;
+}
+
+#quizContainer {
+    margin-top: 20px;
+}
+#timer {
+    font-size: 1.25rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: #ECECEC;
+    text-align: center;
+}
+#questionContainer {
+    margin-bottom: 20px;
+}
+#questionContainer p {
+    font-size: 1.25rem;
+    margin-bottom: 10px;
+    color: #ECECEC;
+    text-align: center;
+}
+#userAnswer {
+    width: 300px;
+    margin: 0 auto;
+    display: block;
+    padding: 10px;
+    font-size: 1rem;
+    border: 1px solid #444;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    color: #333333;
+    background-color: #FFFFFF;
+}
+#resultContainer {
+    margin-top: 20px;
+}
+#resultContainer h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+    color: #F0F0F0;
+}
+#score {
+    font-size: 1.25rem;
+    margin-bottom: 20px;
+    color: #ECECEC;
+    text-align: center;
+    font-weight: bold;
+}
+#detailedResults {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: #404B50;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+#detailedResults p {
+    font-size: 1rem;
+    margin-bottom: 15px;
+    color: #ECECEC;
+    text-align: left;
+    line-height: 1.6;
+    padding: 10px;
+    border-left: 4px solid #C0AA75;
+    background-color: #2A363B;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    transition: border-left-color 0.3s ease;
+}
+#detailedResults p strong {
+    color: #ECECEC;
+    font-weight: bold;
+}
+#detailedResults p.correct:hover {
+    border-left-color: #4caf50;
+}
+#detailedResults p.incorrect:hover {
+    border-left-color: #f31000;
+}
+#redoQuizBtn {
+    margin-top: 20px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* 16) Country Profiles Section */
+.country-profiles {
+    text-align: left;
+}
+.country-profiles h1 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 2rem;
+    color: #F0F0F0;
+}
+.country-profiles p {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 1rem;
+    color: #ECECEC;
+}
+.country-profiles h2 {
+    margin-top: 30px;
+    margin-bottom: 15px;
+    font-size: 1.5rem;
+    color: #F0F0F0;
+}
+.country-profiles ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.country-profiles ul li {
+    margin: 10px 0;
+    padding: 10px;
+    background-color: #404B50;
+    border-radius: 2px;
+    transition: background-color 0.2s ease;
+}
+.country-profiles ul li:hover {
+    background-color: #3B4B54;
+}
+.country-profiles ul li a {
+    text-decoration: none;
+    color: #ECECEC;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.country-profiles ul li a:hover {
+    color: #DCCB9C;
+}
+
+.country-detail-entity {
+    font-size: 1.2rem;
+    color: #ECECEC;
+    margin-bottom: 10px;
+    text-align: center;
+    max-width: 70%;
+    margin-left: auto;
+    margin-right: auto;
+}
+.flag-image {
+    text-align: center;
+    margin: 20px 0;
+}
+.flag-image img {
+    max-width: 300px;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+img {
+    border: 0;
+    outline: 0;
+}
+
+/* 17) About Section */
+.about {
+    text-align: left;
+}
+.about h1 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 2rem;
+    color: #F0F0F0;
+    line-height: 1.2;
+}
+.about p {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #ECECEC;
+    margin-bottom: 20px;
+}
+.about h2 {
+    margin-top: 30px;
+    margin-bottom: 15px;
+    font-size: 1.5rem;
+    color: #F0F0F0;
+}
+.about ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.about ul li {
+    margin: 10px 0;
+    padding: 10px;
+    background-color: #404B50;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+.about ul li:hover {
+    background-color: #3B4B54;
+}
+.about ul li strong {
+    color: #ECECEC;
+    font-weight: bold;
+}
+.about ul li a {
+    text-decoration: none;
+    color: #DCCB9C;
+    transition: color 0.2s ease;
+}
+.about ul li a:hover {
+    color: #C0AA75;
+}
+
+/* 18) World Map Section */
+.world-map {
+    text-align: center;
+}
+.world-map h1 {
+    margin-bottom: 20px;
+    font-size: 2rem;
+    color: #F0F0F0;
+}
+.world-map p {
+    font-size: 1rem;
+    color: #ECECEC;
+    margin-bottom: 20px;
+}
+.search-bar-container {
+    text-align: center;
+    margin: 0 auto;
+    padding: 0;
+    max-width: 300px;
+    position: relative;
+}
+#search-bar {
+    width: 100%;
+    max-width: 300px;
+    padding: 15px;
+    font-size: 1rem;
+    border: 1px solid #444;
+    border-radius: 4px;
+    display: block;
+    margin: 0 auto;
+    color: #333333;
+    background-color: #FFFFFF;
+}
+#map {
+    height: 500px;
+    width: 100%;
+    border-radius: 15px;
+    margin-top: 20px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+/* 19) Home Page Intro */
+.home-intro {
+    font-size: 1rem;
+    line-height: 1.4;
+    margin-bottom: 20px;
+    color: #ECECEC;
+}
+
+/* 20) Mobile-Only: Thin Side Margins */
+@media (max-width: 1024px) {
+    .navbar {
+        width: 100%;
+        min-width: 100%;
+        left: 0;
+        right: 0;
+        top: 0;
+    }
+    .navbar-container {
+        width: 100%;
+        min-width: 100%;
+        margin: 0;
+        padding: 0;
+        height: 80px;
+    }
+    .navbar-list.open {
+        padding-top: calc(env(safe-area-inset-top) + 80px);
+    }
+    .page-content,
+    .quiz,
+    .country-profiles,
+    .about,
+    .world-map {
+        width: 95%;
+        max-width: 600px;
+        margin: 100px auto 150px auto;
+    }
+}
+
+@media (max-width: 1100px) {
+    .navbar-list {
+        display: none;
+    }
+    .navbar-toggle {
+        display: block;
+    }
+    
+    .navbar-menu-overlay {
+        display: none;
+        position: fixed;
+        top: 80px;
+        left: 0;
+        width: 100%;
+        height: calc(100vh - 80px);
+        background: linear-gradient(180deg, #2F3B44, #3B4B54);
+        background-repeat: no-repeat;
+        background-size: 100% 100%;
+        flex-direction: column;
+        align-items: center;
+        z-index: 9998;
+    }
+    .navbar-menu-overlay.open {
+        display: flex;
+    }
+    .navbar-menu-overlay li {
+        margin: 15px 0;
+        width: 100%;
+        text-align: center;
+        background: linear-gradient(180deg, #2F3B44, #3B4B54);
+    }
+    .navbar-menu-overlay li a {
+        font-size: 1.2rem;
+        color: #ECECEC;
+        text-decoration: none;
+        padding: 10px 20px;
+        text-align: center;
+        display: block;
+        width: 100%;
+    }
+    .navbar-menu-overlay li a:hover {
+        background-color: rgba(255,255,255,0.15);
+        color: #DCCB9C;
+    }
+}
+
+.sovereign-state {
+    font-size: 1.2rem;
+    color: #ECECEC;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.sovereign-state a {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+.sovereign-state a:hover {
+    text-decoration: none;
+    color: inherit;
+}
+
+.constituent-countries {
+    font-size: 1.2rem;
+    color: #ECECEC;
+    margin-bottom: 10px;
+    text-align: center;
+    max-width: 70%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.constituent-countries a {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+.constituent-countries a:hover {
+    text-decoration: none;
+    color: inherit;
+}
+
+.country-detail-entity a {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+.country-detail-entity a:hover {
+    text-decoration: none;
+    color: inherit;
+}
+
+.navbar-list.open {
+    display: flex !important;
+    flex-direction: column;
+    position: fixed;
+    top: 80px;
+    left: 0;
+    width: 100%;
+    background: linear-gradient(180deg, #2F3B44, #3B4B54);
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    height: calc(100vh - 80px);
+    padding: 20px 0;
+    z-index: 9998;
+    align-items: center;
+    justify-content: flex-start;
+    transform: none !important;
+    overflow-y: auto;
+    transition: transform 0.3s ease;
+}
+
+
