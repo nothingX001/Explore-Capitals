@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About | ExploreCapitals</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header>
+    <h1><a href="index.html" style="color:inherit;text-decoration:none;">ExploreCapitals</a></h1>
+  </header>
+
+  <main>
+    <h2>About</h2>
+    <p>ExploreCapitals is a lightweight, open-source project demonstrating how to build a purely client-side web app powered by <a href="https://supabase.com" target="_blank" rel="noopener noreferrer">Supabase</a>. Search for any country, view its capitals, and test your knowledge with our quiz!</p>
+    <p>Source code on <a href="https://github.com/your-org/explore-capitals" target="_blank" rel="noopener noreferrer">GitHub</a>.</p>
+  </main>
+
+  <footer>
+    &copy; <span id="year"></span> ExploreCapitals
+  </footer>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear()
+  </script>
+</body>
+</html> 
