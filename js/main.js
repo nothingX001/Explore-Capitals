@@ -17,16 +17,16 @@ const routes = {
   '/index.html': initHome,
   '/': initHome, // Netlify/Pages default
   '/country.html': initCountry,
-  '/quiz.html': initQuiz
+  '/quiz.html': initQuiz,
+  '/profiles.html': initProfiles,
+  '/world-map.html': initMap
 }
 
 const path = window.location.pathname.endsWith('/')
   ? '/'
   : window.location.pathname
 
-if (routes[path]) {
-  routes[path]()
-}
+routes[path]?.();
 
 /* ----------------------------- Home page ----------------------------- */
 async function initHome () {
@@ -68,6 +68,9 @@ async function initHome () {
       resultsContainer.textContent = 'No countries found.'
       return
     }
+
+    // Log search statistics (best-effort)
+    supabase.rpc('increment_search', { p_country: query }).catch(() => {})
 
     data.forEach(country => {
       const card = document.createElement('article')
@@ -111,7 +114,7 @@ async function initCountry () {
   const { data: capitals, error: capErr } = await supabase
     .from('capitals')
     .select('capital_name')
-    .eq('country_id', id)
+    .eq('country_code', id)
 
   if (capErr) {
     console.error(capErr)
@@ -214,4 +217,176 @@ async function initQuiz () {
     const shuffled = shuffle(pool)
     return shuffled.slice(0, count)
   }
-} 
+}
+
+/* -------------------------- Profiles page ---------------------------- */
+async function initProfiles () {
+  const main = document.querySelector('main') || document.body
+  main.innerHTML = '<p>Loading profiles…</p>'
+
+  // Helper to render a list section
+  const renderSection = (title, rows) => {
+    const section = document.createElement('section')
+    const h2 = document.createElement('h2')
+    h2.textContent = title
+    section.appendChild(h2)
+
+    if (!rows.length) {
+      const p = document.createElement('p')
+      p.textContent = 'No entries found.'
+      section.appendChild(p)
+      return section
+    }
+
+    const ul = document.createElement('ul')
+    rows.forEach(r => {
+      const li = document.createElement('li')
+      const a = document.createElement('a')
+      a.href = `country.html?id=${r.id}`
+      a.textContent = `${r.country_name} ${r.flag_emoji || ''}`
+      li.appendChild(a)
+      ul.appendChild(li)
+    })
+    section.appendChild(ul)
+    return section
+  }
+
+  // Fetch all three groups concurrently
+  const [countriesRes, terrRes, deFactoRes] = await Promise.all([
+    supabase
+      .from('countries')
+      .select('id, "Country Name", "Flag Emoji"')
+      .in('entity_type', ['member_state', 'observer_state'])
+      .order('Country Name'),
+    supabase
+      .from('countries')
+      .select('id, "Country Name", "Flag Emoji"')
+      .eq('entity_type', 'territory')
+      .order('Country Name'),
+    supabase
+      .from('countries')
+      .select('id, "Country Name", "Flag Emoji"')
+      .eq('entity_type', 'de_facto_state')
+      .order('Country Name')
+  ])
+
+  if (countriesRes.error || terrRes.error || deFactoRes.error) {
+    console.error(countriesRes.error || terrRes.error || deFactoRes.error)
+    main.textContent = 'Error loading country profiles.'
+    return
+  }
+
+  main.innerHTML = ''
+  main.appendChild(renderSection('Countries', countriesRes.data.map(r => ({
+    id: r.id,
+    country_name: r['Country Name'],
+    flag_emoji: r['Flag Emoji']
+  }))))
+  main.appendChild(renderSection('Territories', terrRes.data.map(r => ({
+    id: r.id,
+    country_name: r['Country Name'],
+    flag_emoji: r['Flag Emoji']
+  }))))
+  main.appendChild(renderSection('De Facto States', deFactoRes.data.map(r => ({
+    id: r.id,
+    country_name: r['Country Name'],
+    flag_emoji: r['Flag Emoji']
+  }))))
+}
+
+/* ----------------------------- Map page ------------------------------ */
+async function initMap () {
+  const main = document.querySelector('main') || document.body
+  main.innerHTML = `
+    <h2>World Map</h2>
+    <p>Explore countries and their capitals around the world.</p>
+    <div class="search-bar-container"><input type="text" id="map-search" placeholder="Search for a country or capital…"></div>
+    <div id="map" style="height:500px;width:100%;border-radius:15px;margin-top:20px;"></div>
+  `
+
+  // dynamic import MAPBOX js + css via CDN (only when this page loaded)
+  const mapboxJsUrl = 'https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js'
+  const mapboxCssUrl = 'https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css'
+  await Promise.all([
+    new Promise(res => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = mapboxCssUrl
+      document.head.appendChild(link)
+      link.onload = res
+    }),
+    new Promise(res => {
+      const script = document.createElement('script')
+      script.src = mapboxJsUrl
+      script.onload = res
+      document.head.appendChild(script)
+    })
+  ])
+
+  // eslint-disable-next-line no-undef
+  mapboxgl.accessToken = 'YOUR_MAPBOX_TOKEN'
+  // eslint-disable-next-line no-undef
+  const map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/streets-v12',
+    center: [0, 20],
+    zoom: 1.5,
+    projection: 'globe'
+  })
+
+  // Add fog for globe
+  map.on('style.load', () => {
+    map.setFog({
+      range: [0.5, 10],
+      color: 'rgba(135,206,235,0.15)',
+      'high-color': 'rgba(255,255,255,0.1)',
+      'space-color': 'rgba(0,0,0,1)',
+      'horizon-blend': 0.1,
+      'star-intensity': 0.1
+    })
+  })
+
+  // Fetch countries + capitals to plot markers
+  const { data, error } = await supabase
+    .from('capitals')
+    .select('capital_name, latitude, longitude, countries(id, "Country Name", "Flag Emoji")')
+
+  if (error) {
+    console.error(error)
+  }
+
+  // eslint-disable-next-line no-undef
+  const popup = new mapboxgl.Popup({ closeButton: false, closeOnClick: false })
+
+  data?.forEach(row => {
+    if (row.latitude === null || row.longitude === null) return
+    // eslint-disable-next-line no-undef
+    const marker = new mapboxgl.Marker()
+      .setLngLat([row.longitude, row.latitude])
+      .addTo(map)
+    marker.getElement().addEventListener('mouseenter', () => {
+      popup
+        .setLngLat([row.longitude, row.latitude])
+        .setHTML(`<strong>${row.capital_name}</strong><br>${row.countries['Country Name']} ${row.countries['Flag Emoji'] || ''}`)
+        .addTo(map)
+    })
+    marker.getElement().addEventListener('mouseleave', () => popup.remove())
+    marker.getElement().addEventListener('click', () => {
+      window.location.href = `country.html?id=${row.countries.id}`
+    })
+  })
+
+  // Search bar behavior
+  const searchInput = document.getElementById('map-search')
+  searchInput.addEventListener('keyup', e => {
+    if (e.key !== 'Enter') return
+    const q = e.target.value.trim().toLowerCase()
+    if (!q) return
+    const match = data.find(
+      d => d.capital_name.toLowerCase() === q || d.countries['Country Name'].toLowerCase() === q
+    )
+    if (match) {
+      map.flyTo({ center: [match.longitude, match.latitude], zoom: 5 })
+    }
+  })
+}

@@ -15,14 +15,45 @@
     <h2>About</h2>
     <p>ExploreCapitals is a lightweight, open-source project demonstrating how to build a purely client-side web app powered by <a href="https://supabase.com" target="_blank" rel="noopener noreferrer">Supabase</a>. Search for any country, view its capitals, and test your knowledge with our quiz!</p>
     <p>Source code on <a href="https://github.com/your-org/explore-capitals" target="_blank" rel="noopener noreferrer">GitHub</a>.</p>
+    <ul>
+      <li><strong>Most Searched Country:</strong> <span id="mostSearched">Loading…</span></li>
+      <li><strong>Total Searches:</strong> <span id="totalSearches">0</span></li>
+      <li><strong>Most Recent Search:</strong> <span id="recentSearch">Loading…</span></li>
+      <li><strong>Searches Today:</strong> <span id="searchesToday">0</span></li>
+      <li><strong>Unique Countries Searched:</strong> <span id="uniqueCountries">0</span></li>
+    </ul>
   </main>
 
   <footer>
     &copy; <span id="year"></span> ExploreCapitals
   </footer>
 
-  <script>
+  <script type="module" src="js/main.js"></script>
+  <script type="module">
+    import { supabase } from './js/main.js'
+
+    async function loadStats () {
+      const { data: stats, error } = await supabase.from('site_statistics').select('*')
+      if (error) {
+        console.error(error)
+        return
+      }
+      if (!stats.length) return
+      // Calculate most searched and totals
+      const sorted = [...stats].sort((a, b) => b.search_count - a.search_count)
+      const mostSearched = sorted[0]
+      const totalSearches = stats.reduce((sum, s) => sum + s.search_count, 0)
+      const recent = [...stats].sort((a, b) => new Date(b.last_searched_at) - new Date(a.last_searched_at))[0]
+      const today = stats.filter(s => new Date(s.last_searched_at).toDateString() === new Date().toDateString()).reduce((sum, s) => sum + s.search_count, 0)
+      document.getElementById('mostSearched').textContent = mostSearched?.country_name || '—'
+      document.getElementById('totalSearches').textContent = totalSearches
+      document.getElementById('recentSearch').textContent = recent?.country_name || '—'
+      document.getElementById('searchesToday').textContent = today
+      document.getElementById('uniqueCountries').textContent = stats.length
+    }
+
     document.getElementById('year').textContent = new Date().getFullYear()
+    loadStats()
   </script>
 </body>
 </html> 
